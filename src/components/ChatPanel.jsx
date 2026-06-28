@@ -1,6 +1,16 @@
 import { useRef, useEffect, useState } from 'react';
 import { Send, RotateCcw } from 'lucide-react';
 
+// Shows how many seconds Gemini has been generating
+function ElapsedTimer() {
+  const [secs, setSecs] = useState(0);
+  useEffect(() => {
+    const t = setInterval(() => setSecs(s => s + 1), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return <span style={{ fontSize: 10, color: 'var(--text-4)', marginLeft: 4 }}>{secs}s</span>;
+}
+
 export default function ChatPanel({ messages, isGenerating, onSend, onReset, activePageName }) {
   const [input, setInput] = useState('');
   const bottomRef = useRef(null);
@@ -53,7 +63,7 @@ export default function ChatPanel({ messages, isGenerating, onSend, onReset, act
                 <div className="ai-avatar">AI</div>
                 <div className="bubble-ai">
                   {m.streaming
-                    ? <><span style={{ color: 'var(--text-2)' }}>{m.content || 'Generating'}</span> <span className="dot" /><span className="dot" /><span className="dot" /></>
+                    ? <><span style={{ color: 'var(--text-2)' }}>{m.content || 'Generating'}</span><span className="dot" /><span className="dot" /><span className="dot" /></>
                     : m.content}
                   {m.hasCode && !m.streaming && (
                     <div><span className="gen-badge">✓ Website generated</span></div>
@@ -63,14 +73,18 @@ export default function ChatPanel({ messages, isGenerating, onSend, onReset, act
             )}
           </div>
         ))}
+
+        {/* Typing indicator with live elapsed timer */}
         {isGenerating && messages[messages.length - 1]?.role !== 'ai' && (
-          <div className="msg-row-ai">
+          <div className="msg-row-ai fade-up">
             <div className="ai-avatar">AI</div>
-            <div className="bubble-ai">
+            <div className="bubble-ai" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
               <span className="dot" /><span className="dot" /><span className="dot" />
+              <ElapsedTimer />
             </div>
           </div>
         )}
+
         <div ref={bottomRef} />
       </div>
 
@@ -95,7 +109,11 @@ export default function ChatPanel({ messages, isGenerating, onSend, onReset, act
               : <Send size={13} color="white" />}
           </button>
         </div>
-        <div className="chat-hint">Shift+Enter for new line</div>
+        <div className="chat-hint">
+          {isGenerating
+            ? '⏳ Gemini is building your page — usually 15–30 seconds'
+            : 'Shift+Enter for new line'}
+        </div>
       </div>
     </div>
   );
